@@ -1,0 +1,31 @@
+# =============================================
+# Git Attributes - Normalización de finales de línea
+# =============================================
+# Crítico para trabajar entre Windows y Linux (Render)
+
+# Unix/Linux scripts - SIEMPRE LF
+/mvnw text eol=lf
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Archivos de configuración - SIEMPRE LF
+*.properties text eol=lf
+*.xml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+
+# Windows scripts - SIEMPRE CRLF
+/mvnw.cmd text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binarios - SIN normalización
+*.jar binary
+*.class binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.war binary
