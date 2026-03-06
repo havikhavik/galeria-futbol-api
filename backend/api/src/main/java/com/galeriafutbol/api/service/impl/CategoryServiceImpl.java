@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.galeriafutbol.api.dto.CategoryAdminRequest;
+import com.galeriafutbol.api.dto.CategoryAdminResponse;
 import com.galeriafutbol.api.exception.ResourceNotFoundException;
 import com.galeriafutbol.api.model.Category;
 import com.galeriafutbol.api.model.TeamType;
@@ -22,6 +23,19 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryServiceImpl(CategoryRepository categoryRepository, ImageStorageService imageStorageService) {
         this.categoryRepository = categoryRepository;
         this.imageStorageService = imageStorageService;
+    }
+
+    @Override
+    public CategoryAdminResponse createDraft() {
+        Category category = new Category();
+        long timestamp = System.currentTimeMillis();
+        category.setCode("DRAFT_" + timestamp);
+        category.setName("Draft");
+        category.setTeamType(TeamType.CLUB);
+        category.setThumbnail(null);
+        category.setCreatedAt(OffsetDateTime.now());
+        Category saved = categoryRepository.save(category);
+        return toAdminResponse(saved);
     }
 
     @Override
@@ -77,5 +91,16 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         categoryRepository.delete(category);
+    }
+
+    private CategoryAdminResponse toAdminResponse(Category category) {
+        CategoryAdminResponse response = new CategoryAdminResponse();
+        response.setId(category.getId());
+        response.setCode(category.getCode());
+        response.setName(category.getName());
+        response.setTeamType(category.getTeamType());
+        response.setThumbnail(category.getThumbnail());
+        response.setCreatedAt(category.getCreatedAt());
+        return response;
     }
 }

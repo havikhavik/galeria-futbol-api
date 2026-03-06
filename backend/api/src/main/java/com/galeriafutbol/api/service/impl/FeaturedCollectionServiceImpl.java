@@ -63,6 +63,27 @@ public class FeaturedCollectionServiceImpl implements FeaturedCollectionService 
 
     @Override
     @Transactional
+    public FeaturedCollectionAdminResponse createDraft() {
+        FeaturedCollection collection = new FeaturedCollection();
+        long timestamp = System.currentTimeMillis();
+        collection.setSlug("draft-" + timestamp);
+        collection.setTitle("Draft");
+        collection.setDescription(null);
+        collection.setStartDate(OffsetDateTime.now());
+        collection.setEndDate(OffsetDateTime.now().plusDays(1));
+        collection.setActive(false);
+        collection.setPriority(0);
+        collection.setBannerImage("placeholder");
+        collection.setCreatedBy(getCurrentUser().orElse(null));
+        collection.setCreatedAt(OffsetDateTime.now());
+        collection.setUpdatedAt(OffsetDateTime.now());
+
+        FeaturedCollection saved = featuredCollectionRepository.save(collection);
+        return featuredCollectionMapper.toAdminResponse(saved);
+    }
+
+    @Override
+    @Transactional
     public FeaturedCollectionAdminResponse createFeaturedCollection(FeaturedCollectionAdminRequest request) {
         FeaturedCollection collection = new FeaturedCollection();
         applyRequestToCollection(collection, request);

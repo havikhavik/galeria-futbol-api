@@ -39,13 +39,23 @@ public class AdminUploadController {
         return uploadImageService.uploadForAdmin(file, albumId);
     }
 
-    @PostMapping("/category-thumbnail/{categoryCode}")
+    @PostMapping("/category-thumbnail/{categoryId}")
     @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Subir thumbnail de categoría", description = "Sube el thumbnail para una categoría específica")
     public UploadImageResponse uploadCategoryThumbnail(
-            @PathVariable String categoryCode,
+            @PathVariable Long categoryId,
             @RequestParam("file") MultipartFile file) {
-        return uploadImageService.uploadForCategory(file, categoryCode);
+        return uploadImageService.uploadForCategory(file, categoryId);
+    }
+
+    @PostMapping("/featured-banner/{featuredCollectionId}")
+    @PreAuthorize("hasAnyRole('ADMIN','EDITOR')")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Subir banner de colección destacada", description = "Sube el banner para una colección destacada específica")
+    public UploadImageResponse uploadFeaturedBanner(
+            @PathVariable Long featuredCollectionId,
+            @RequestParam("file") MultipartFile file) {
+        return uploadImageService.uploadForFeaturedBanner(file, featuredCollectionId);
     }
 }

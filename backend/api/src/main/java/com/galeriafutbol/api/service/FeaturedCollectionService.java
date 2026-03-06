@@ -14,6 +14,8 @@ public interface FeaturedCollectionService {
 
     FeaturedCollectionWithAlbumsResponse getBySlug(String slug);
 
+    FeaturedCollectionAdminResponse createDraft();
+
     FeaturedCollectionAdminResponse createFeaturedCollection(FeaturedCollectionAdminRequest request);
 
     FeaturedCollectionAdminResponse partialUpdate(Long id, FeaturedCollectionPartialRequest request);

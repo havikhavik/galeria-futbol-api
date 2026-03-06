@@ -8,5 +8,7 @@ public interface UploadImageService {
 
     UploadImageResponse uploadForAdmin(MultipartFile file, Long albumId);
 
-    UploadImageResponse uploadForCategory(MultipartFile file, String categoryCode);
+    UploadImageResponse uploadForCategory(MultipartFile file, Long categoryId);
+
+    UploadImageResponse uploadForFeaturedBanner(MultipartFile file, Long featuredCollectionId);
 }

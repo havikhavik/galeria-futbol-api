@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.InputStream;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,87 +20,94 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import com.galeriafutbol.api.dto.UploadImageResponse;
 import com.galeriafutbol.api.exception.BadRequestException;
+import com.galeriafutbol.api.model.Category;
+import com.galeriafutbol.api.model.FeaturedCollection;
+import com.galeriafutbol.api.repository.CategoryRepository;
+import com.galeriafutbol.api.repository.FeaturedCollectionRepository;
 import com.galeriafutbol.api.service.impl.UploadImageServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 class UploadImageServiceTest {
 
-    @Mock
-    private ImageStorageService imageStorageService;
+        @Mock
+        private ImageStorageService imageStorageService;
 
-    @InjectMocks
-    private UploadImageServiceImpl uploadImageService;
+        @Mock
+        private CategoryRepository categoryRepository;
 
-    @Test
-    void uploadForAdmin_throwsWhenFileEmpty() {
-        MockMultipartFile emptyFile = new MockMultipartFile("file", new byte[0]);
+        @Mock
+        private FeaturedCollectionRepository featuredCollectionRepository;
 
-        assertThatThrownBy(() -> uploadImageService.uploadForAdmin(emptyFile, null))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("El archivo de imagen es obligatorio");
-    }
+        @InjectMocks
+        private UploadImageServiceImpl uploadImageService;
 
-    @Test
-    void uploadForAdmin_uploadsToStorageAndReturnsResponse() throws Exception {
-        byte[] content = "dummy".getBytes();
-        MockMultipartFile file = new MockMultipartFile("file", "test.png", "image/png", content);
+        @Test
+        void uploadForAdmin_throwsWhenFileEmpty() {
+                MockMultipartFile emptyFile = new MockMultipartFile("file", new byte[0]);
 
-        when(imageStorageService.upload(any(), anyLong(), anyString(), anyString()))
-                .thenReturn("https://cdn.example.com/albums/1/test.png");
+                assertThatThrownBy(() -> uploadImageService.uploadForAdmin(emptyFile, null))
+                                .isInstanceOf(BadRequestException.class)
+                                .hasMessageContaining("El archivo de imagen es obligatorio");
+        }
 
-        UploadImageResponse response = uploadImageService.uploadForAdmin(file, 1L);
+        @Test
+        void uploadForAdmin_uploadsToStorageAndReturnsResponse() throws Exception {
+                byte[] content = "dummy".getBytes();
+                MockMultipartFile file = new MockMultipartFile("file", "test.png", "image/png", content);
 
-        assertThat(response.getUrl()).contains("albums/1");
-        verify(imageStorageService).upload(any(InputStream.class), anyLong(), anyString(), anyString());
-    }
+                when(imageStorageService.upload(any(), anyLong(), anyString(), anyString()))
+                                .thenReturn("https://cdn.example.com/albums/1/test.png");
 
-    @Test
-    void uploadForAdmin_wrapsExceptionsFromStorage() throws Exception {
-        byte[] content = "dummy".getBytes();
-        MockMultipartFile file = new MockMultipartFile("file", "test.png", "image/png", content);
+                UploadImageResponse response = uploadImageService.uploadForAdmin(file, 1L);
 
-        when(imageStorageService.upload(any(), anyLong(), anyString(), anyString()))
-                .thenThrow(new RuntimeException("storage error"));
+                assertThat(response.getUrl()).contains("albums/1");
+                verify(imageStorageService).upload(any(InputStream.class), anyLong(), anyString(), anyString());
+        }
 
-        assertThatThrownBy(() -> uploadImageService.uploadForAdmin(file, null))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("No se pudo subir la imagen a R2");
-    }
+        @Test
+        void uploadForAdmin_wrapsExceptionsFromStorage() throws Exception {
+                byte[] content = "dummy".getBytes();
+                MockMultipartFile file = new MockMultipartFile("file", "test.png", "image/png", content);
 
-    @Test
-    void uploadForCategory_throwsWhenFileEmpty() {
-        MockMultipartFile emptyFile = new MockMultipartFile("file", new byte[0]);
+                when(imageStorageService.upload(any(), anyLong(), anyString(), anyString()))
+                                .thenThrow(new RuntimeException("storage error"));
 
-        assertThatThrownBy(() -> uploadImageService.uploadForCategory(emptyFile, "LA_LIGA"))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("El archivo de imagen es obligatorio");
-    }
+                assertThatThrownBy(() -> uploadImageService.uploadForAdmin(file, null))
+                                .isInstanceOf(BadRequestException.class)
+                                .hasMessageContaining("No se pudo subir la imagen a R2");
+        }
 
-    @Test
-    void uploadForCategory_throwsWhenCategoryCodeMissing() {
-        byte[] content = "dummy".getBytes();
-        MockMultipartFile file = new MockMultipartFile("file", "logo.svg", "image/svg+xml", content);
+        @Test
+        void uploadForCategory_throwsWhenFileEmpty() {
+                MockMultipartFile emptyFile = new MockMultipartFile("file", new byte[0]);
 
-        assertThatThrownBy(() -> uploadImageService.uploadForCategory(file, null))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("código de categoría es obligatorio");
+                assertThatThrownBy(() -> uploadImageService.uploadForCategory(emptyFile, 1L))
+                                .isInstanceOf(BadRequestException.class)
+                                .hasMessageContaining("El archivo de imagen es obligatorio");
+        }
 
-        assertThatThrownBy(() -> uploadImageService.uploadForCategory(file, "   "))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("código de categoría es obligatorio");
-    }
+        @Test
+        void uploadForCategory_throwsWhenCategoryIdMissing() {
+                byte[] content = "dummy".getBytes();
+                MockMultipartFile file = new MockMultipartFile("file", "logo.svg", "image/svg+xml", content);
 
-    @Test
-    void uploadForCategory_uploadsToCorrectPath() throws Exception {
-        byte[] content = "dummy".getBytes();
-        MockMultipartFile file = new MockMultipartFile("file", "logo.svg", "image/svg+xml", content);
+                assertThatThrownBy(() -> uploadImageService.uploadForCategory(file, null))
+                                .isInstanceOf(BadRequestException.class)
+                                .hasMessageContaining("id de la categoría es obligatorio");
+        }
 
-        when(imageStorageService.upload(any(), anyLong(), anyString(), anyString()))
-                .thenReturn("https://cdn.example.com/icons/categories/LA_LIGA/logo.svg");
+        @Test
+        void uploadForCategory_uploadsToCorrectPath() throws Exception {
+                byte[] content = "dummy".getBytes();
+                MockMultipartFile file = new MockMultipartFile("file", "logo.svg", "image/svg+xml", content);
 
-        UploadImageResponse response = uploadImageService.uploadForCategory(file, "LA_LIGA");
+                when(categoryRepository.findById(1L)).thenReturn(Optional.of(new Category()));
+                when(imageStorageService.upload(any(), anyLong(), anyString(), anyString()))
+                                .thenReturn("https://cdn.example.com/icons/categories/1/logo.svg");
 
-        assertThat(response.getUrl()).contains("icons/categories/LA_LIGA");
-        verify(imageStorageService).upload(any(InputStream.class), anyLong(), anyString(), anyString());
-    }
+                UploadImageResponse response = uploadImageService.uploadForCategory(file, 1L);
+
+                assertThat(response.getUrl()).contains("icons/categories/1");
+                verify(imageStorageService).upload(any(InputStream.class), anyLong(), anyString(), anyString());
+        }
 }

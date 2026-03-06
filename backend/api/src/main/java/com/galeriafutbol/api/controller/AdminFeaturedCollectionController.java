@@ -31,6 +31,14 @@ public class AdminFeaturedCollectionController {
         this.featuredCollectionService = featuredCollectionService;
     }
 
+    @PostMapping("/draft")
+    @PreAuthorize("hasAnyRole('ADMIN','EDITOR')")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Crear borrador", description = "Crea una promoción en estado DRAFT para subir banner")
+    public FeaturedCollectionAdminResponse createDraft() {
+        return featuredCollectionService.createDraft();
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','EDITOR')")
     @ResponseStatus(HttpStatus.CREATED)

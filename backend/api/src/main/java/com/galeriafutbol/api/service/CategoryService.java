@@ -8,6 +8,8 @@ import com.galeriafutbol.api.model.TeamType;
 
 public interface CategoryService {
 
+    com.galeriafutbol.api.dto.CategoryAdminResponse createDraft();
+
     Category createCategory(CategoryAdminRequest request);
 
     Category updateCategory(Long id, CategoryAdminRequest request);

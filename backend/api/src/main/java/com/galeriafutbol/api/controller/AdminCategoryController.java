@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.galeriafutbol.api.dto.CategoryAdminRequest;
+import com.galeriafutbol.api.dto.CategoryAdminResponse;
 import com.galeriafutbol.api.model.Category;
 import com.galeriafutbol.api.service.CategoryService;
 
@@ -29,6 +30,14 @@ public class AdminCategoryController {
 
     public AdminCategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
+    }
+
+    @PostMapping("/draft")
+    @PreAuthorize("hasAnyRole('ADMIN','EDITOR')")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Crear borrador", description = "Crea una categoría en estado DRAFT para subir thumbnail")
+    public CategoryAdminResponse createDraft() {
+        return categoryService.createDraft();
     }
 
     @PostMapping
