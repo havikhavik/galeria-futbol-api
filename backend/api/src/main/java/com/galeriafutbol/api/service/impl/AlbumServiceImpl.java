@@ -65,13 +65,41 @@ public class AlbumServiceImpl implements AlbumService {
     @Override
     @Transactional(readOnly = true)
     public Page<AlbumPublicResponse> searchAlbums(AlbumSearchFilter filter, Pageable pageable) {
+        return searchAlbumsInternal(filter, pageable, AlbumStatus.PUBLISHED)
+                .map(albumMapper::toPublicResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AlbumAdminResponse> searchAlbumsForAdmin(AlbumSearchFilter filter, Pageable pageable,
+            AlbumStatus status) {
+        return searchAlbumsInternal(filter, pageable, status)
+                .map(albumMapper::toAdminResponse);
+    }
+
+    private Page<Album> searchAlbumsInternal(AlbumSearchFilter filter, Pageable pageable, AlbumStatus status) {
         String query = (filter.getQ() == null || filter.getQ().isBlank()) ? null : filter.getQ().toLowerCase();
         String categoryCode = (filter.getCategoryCode() == null || filter.getCategoryCode().isBlank())
                 ? null
                 : filter.getCategoryCode();
 
-        Page<Album> page = albumRepository.searchAlbums(
-                AlbumStatus.PUBLISHED,
+        if (status == null) {
+            return albumRepository.searchAlbumsWithoutStatus(
+                    query,
+                    filter.getTeamType(),
+                    categoryCode,
+                    filter.getSeasonStart(),
+                    filter.getKids(),
+                    filter.getWomen(),
+                    filter.getGoalkeeper(),
+                    filter.getTraining(),
+                    filter.getClassic(),
+                    filter.getRetro(),
+                    pageable);
+        }
+
+        return albumRepository.searchAlbums(
+                status,
                 query,
                 filter.getTeamType(),
                 categoryCode,
@@ -83,7 +111,6 @@ public class AlbumServiceImpl implements AlbumService {
                 filter.getClassic(),
                 filter.getRetro(),
                 pageable);
-        return page.map(albumMapper::toPublicResponse);
     }
 
     @Override

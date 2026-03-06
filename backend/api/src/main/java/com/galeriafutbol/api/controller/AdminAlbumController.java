@@ -2,10 +2,13 @@ package com.galeriafutbol.api.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -16,8 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.galeriafutbol.api.dto.AlbumAdminRequest;
 import com.galeriafutbol.api.dto.AlbumAdminResponse;
+import com.galeriafutbol.api.dto.AlbumSearchFilter;
 import com.galeriafutbol.api.dto.ImageAdminRequest;
 import com.galeriafutbol.api.dto.ImageResponse;
+import com.galeriafutbol.api.model.AlbumStatus;
 import com.galeriafutbol.api.service.AlbumService;
 import com.galeriafutbol.api.service.ImageService;
 
@@ -35,6 +40,14 @@ public class AdminAlbumController {
     public AdminAlbumController(AlbumService albumService, ImageService imageService) {
         this.albumService = albumService;
         this.imageService = imageService;
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','EDITOR')")
+    @Operation(summary = "Listar álbumes (Admin)", description = "Obtiene una lista paginada de álbumes DRAFT y PUBLISHED. Se puede filtrar por status opcionalmente")
+    public Page<AlbumAdminResponse> searchAlbumsForAdmin(AlbumSearchFilter filter, Pageable pageable,
+            AlbumStatus status) {
+        return albumService.searchAlbumsForAdmin(filter, pageable, status);
     }
 
     @PostMapping("/draft")

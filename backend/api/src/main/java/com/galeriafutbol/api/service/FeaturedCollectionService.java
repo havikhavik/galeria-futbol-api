@@ -12,6 +12,8 @@ public interface FeaturedCollectionService {
 
     List<FeaturedCollectionResponse> getAllActive();
 
+    List<FeaturedCollectionAdminResponse> getAllForAdmin();
+
     FeaturedCollectionWithAlbumsResponse getBySlug(String slug);
 
     FeaturedCollectionAdminResponse createDraft();
