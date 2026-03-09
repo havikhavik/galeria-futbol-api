@@ -78,6 +78,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/ping").permitAll()
                         .requestMatchers("/albums", "/albums/**").permitAll()
                         .requestMatchers("/categories", "/categories/**").permitAll()
                         .requestMatchers("/featured", "/featured/**").permitAll()
