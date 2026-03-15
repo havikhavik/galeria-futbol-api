@@ -99,6 +99,18 @@ public class AlbumServiceImpl implements AlbumService {
         });
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public AlbumAdminResponse getAlbumForAdminById(Long id) {
+        Album album = findAlbumEntityById(id);
+        AlbumAdminResponse dto = albumMapper.toAdminResponse(album);
+        dto.setImageCount(imageRepository.countByAlbumIds(List.of(id)).stream()
+                .findFirst()
+                .map(AlbumImageCountProjection::getTotalImages)
+                .orElse(0L));
+        return dto;
+    }
+
     private Page<Album> searchAlbumsInternal(AlbumSearchFilter filter, Pageable pageable, AlbumStatus status) {
         String query = (filter.getQ() == null || filter.getQ().isBlank()) ? null : filter.getQ().toLowerCase();
         String categoryCode = (filter.getCategoryCode() == null || filter.getCategoryCode().isBlank())

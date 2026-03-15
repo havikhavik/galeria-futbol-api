@@ -50,6 +50,13 @@ public class AdminAlbumController {
         return albumService.searchAlbumsForAdmin(filter, pageable, status);
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','EDITOR')")
+    @Operation(summary = "Obtener álbum (Admin)", description = "Obtiene un álbum para edición con datos administrativos")
+    public AlbumAdminResponse getAlbumForAdminById(@PathVariable Long id) {
+        return albumService.getAlbumForAdminById(id);
+    }
+
     @PostMapping("/draft")
     @PreAuthorize("hasAnyRole('ADMIN','EDITOR')")
     @ResponseStatus(HttpStatus.CREATED)

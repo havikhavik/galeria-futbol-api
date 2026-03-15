@@ -17,6 +17,8 @@ public interface AlbumService {
 
     Page<AlbumAdminResponse> searchAlbumsForAdmin(AlbumSearchFilter filter, Pageable pageable, AlbumStatus status);
 
+    AlbumAdminResponse getAlbumForAdminById(Long id);
+
     AlbumAdminResponse createDraft();
 
     AlbumAdminResponse createAlbum(AlbumAdminRequest request);
