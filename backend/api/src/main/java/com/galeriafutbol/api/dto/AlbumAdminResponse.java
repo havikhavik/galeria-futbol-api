@@ -23,6 +23,7 @@ public class AlbumAdminResponse {
 
     private String thumbnail;
     private String description;
+    private Long imageCount;
 
     private boolean kids;
     private boolean women;

@@ -13,6 +13,14 @@ import com.galeriafutbol.api.model.TeamType;
 public interface AlbumRepository extends JpaRepository<Album, Long> {
 
   @Query("""
+      SELECT COUNT(a)
+      FROM Album a
+      JOIN a.category c
+      WHERE c.teamType = :teamType
+      """)
+  long countByTeamType(@Param("teamType") TeamType teamType);
+
+  @Query("""
       SELECT a
       FROM Album a
       LEFT JOIN FETCH a.category c

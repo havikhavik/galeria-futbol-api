@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.galeriafutbol.api.dto.AdminStatsOverviewResponse;
 import com.galeriafutbol.api.service.AdminStatsService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +22,13 @@ public class AdminStatsController {
 
     public AdminStatsController(AdminStatsService adminStatsService) {
         this.adminStatsService = adminStatsService;
+    }
+
+    @GetMapping("/overview")
+    @PreAuthorize("hasAnyRole('ADMIN','EDITOR')")
+    @Operation(summary = "Resumen de estadísticas", description = "Devuelve métricas agregadas para dashboard admin")
+    public AdminStatsOverviewResponse getOverview() {
+        return adminStatsService.getOverview();
     }
 
     @GetMapping("/images/count")

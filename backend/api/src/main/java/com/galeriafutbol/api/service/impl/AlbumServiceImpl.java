@@ -1,5 +1,8 @@
 package com.galeriafutbol.api.service.impl;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -22,7 +25,9 @@ import com.galeriafutbol.api.model.Category;
 import com.galeriafutbol.api.model.Image;
 import com.galeriafutbol.api.model.User;
 import com.galeriafutbol.api.repository.AlbumRepository;
+import com.galeriafutbol.api.repository.AlbumImageCountProjection;
 import com.galeriafutbol.api.repository.CategoryRepository;
+import com.galeriafutbol.api.repository.ImageRepository;
 import com.galeriafutbol.api.repository.UserRepository;
 import com.galeriafutbol.api.service.AlbumService;
 import com.galeriafutbol.api.service.ImageStorageService;
@@ -37,17 +42,20 @@ public class AlbumServiceImpl implements AlbumService {
     private final ImageStorageService imageStorageService;
     private final AlbumMapper albumMapper;
     private final UserRepository userRepository;
+    private final ImageRepository imageRepository;
 
     public AlbumServiceImpl(AlbumRepository albumRepository,
             CategoryRepository categoryRepository,
             ImageStorageService imageStorageService,
             AlbumMapper albumMapper,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            ImageRepository imageRepository) {
         this.albumRepository = albumRepository;
         this.categoryRepository = categoryRepository;
         this.imageStorageService = imageStorageService;
         this.albumMapper = albumMapper;
         this.userRepository = userRepository;
+        this.imageRepository = imageRepository;
     }
 
     @Override
@@ -73,8 +81,22 @@ public class AlbumServiceImpl implements AlbumService {
     @Transactional(readOnly = true)
     public Page<AlbumAdminResponse> searchAlbumsForAdmin(AlbumSearchFilter filter, Pageable pageable,
             AlbumStatus status) {
-        return searchAlbumsInternal(filter, pageable, status)
-                .map(albumMapper::toAdminResponse);
+        Page<Album> albumPage = searchAlbumsInternal(filter, pageable, status);
+
+        List<Long> albumIds = albumPage.getContent().stream().map(Album::getId).toList();
+        Map<Long, Long> imageCountByAlbumId = new HashMap<>();
+
+        if (!albumIds.isEmpty()) {
+            for (AlbumImageCountProjection row : imageRepository.countByAlbumIds(albumIds)) {
+                imageCountByAlbumId.put(row.getAlbumId(), row.getTotalImages());
+            }
+        }
+
+        return albumPage.map(album -> {
+            AlbumAdminResponse dto = albumMapper.toAdminResponse(album);
+            dto.setImageCount(imageCountByAlbumId.getOrDefault(album.getId(), 0L));
+            return dto;
+        });
     }
 
     private Page<Album> searchAlbumsInternal(AlbumSearchFilter filter, Pageable pageable, AlbumStatus status) {
