@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.time.OffsetDateTime;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -150,10 +151,11 @@ public class AlbumServiceImpl implements AlbumService {
     @Override
     @Transactional
     public AlbumAdminResponse createDraft() {
+        int currentYear = OffsetDateTime.now().getYear();
         Album album = new Album();
-        album.setTitle("Draft");
-        album.setSeasonStart(2024);
-        album.setSeasonLabel("2024-2025");
+        album.setTitle("Draft-" + System.currentTimeMillis());
+        album.setSeasonStart(currentYear);
+        album.setSeasonLabel(generateSeasonLabel(currentYear));
         album.setCreatedBy(getCurrentUser().orElse(null));
 
         Album saved = albumRepository.save(album);
