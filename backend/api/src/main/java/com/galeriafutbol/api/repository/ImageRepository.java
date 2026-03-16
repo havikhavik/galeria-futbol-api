@@ -12,6 +12,8 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
 
     List<Image> findByAlbumIdOrderByPositionAsc(Long albumId);
 
+    boolean existsByAlbumIdAndUrl(Long albumId, String url);
+
     @Query("""
             SELECT i.album.id AS albumId, COUNT(i.id) AS totalImages
             FROM Image i

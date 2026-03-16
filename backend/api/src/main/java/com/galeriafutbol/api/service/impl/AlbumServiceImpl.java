@@ -212,12 +212,7 @@ public class AlbumServiceImpl implements AlbumService {
         applyAdminRequestToAlbum(album, request, category);
         album.setUpdatedBy(requireCurrentUser());
 
-        if (oldThumbnail != null && !oldThumbnail.isBlank()) {
-            String newThumbnail = request.getThumbnail();
-            if (newThumbnail == null || !oldThumbnail.equals(newThumbnail)) {
-                imageStorageService.delete(oldThumbnail);
-            }
-        }
+        deleteOldThumbnailIfUnused(id, oldThumbnail, request.getThumbnail());
 
         Album saved = albumRepository.save(album);
         return albumMapper.toAdminResponse(saved);
@@ -259,15 +254,25 @@ public class AlbumServiceImpl implements AlbumService {
         album.setStatus(AlbumStatus.PUBLISHED);
         album.setUpdatedBy(requireCurrentUser());
 
-        if (oldThumbnail != null && !oldThumbnail.isBlank()) {
-            String newThumbnail = request.getThumbnail();
-            if (newThumbnail == null || !oldThumbnail.equals(newThumbnail)) {
-                imageStorageService.delete(oldThumbnail);
-            }
-        }
+        deleteOldThumbnailIfUnused(id, oldThumbnail, request.getThumbnail());
 
         Album saved = albumRepository.save(album);
         return albumMapper.toAdminResponse(saved);
+    }
+
+    private void deleteOldThumbnailIfUnused(Long albumId, String oldThumbnail, String newThumbnail) {
+        if (oldThumbnail == null || oldThumbnail.isBlank()) {
+            return;
+        }
+
+        if (newThumbnail != null && oldThumbnail.equals(newThumbnail)) {
+            return;
+        }
+
+        boolean stillReferencedByAlbumImages = imageRepository.existsByAlbumIdAndUrl(albumId, oldThumbnail);
+        if (!stillReferencedByAlbumImages) {
+            imageStorageService.delete(oldThumbnail);
+        }
     }
 
     private Category findCategoryByCode(String code) {
