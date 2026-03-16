@@ -10,6 +10,8 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -96,6 +98,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ErrorResponse> onMethodNotAllowed(HttpRequestMethodNotSupportedException ex, WebRequest req) {
         return build(HttpStatus.METHOD_NOT_ALLOWED, ex.getMessage(), req, null);
+    }
+
+    // 413 – Archivo demasiado grande
+    @ExceptionHandler({ MaxUploadSizeExceededException.class, MultipartException.class })
+    public ResponseEntity<ErrorResponse> onMultipartTooLarge(Exception ex, WebRequest req) {
+        return build(HttpStatus.PAYLOAD_TOO_LARGE,
+                "El archivo supera el tamaño máximo permitido",
+                req,
+                null);
     }
 
     // 409 – Conflicto de integridad de datos (UNIQUE / FK, etc.)
