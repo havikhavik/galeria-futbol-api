@@ -20,7 +20,9 @@ import com.galeriafutbol.api.dto.AlbumAdminResponse;
 import com.galeriafutbol.api.dto.AlbumPublicResponse;
 import com.galeriafutbol.api.dto.AlbumSearchFilter;
 import com.galeriafutbol.api.exception.BadRequestException;
+import com.galeriafutbol.api.exception.ConflictException;
 import com.galeriafutbol.api.exception.ResourceNotFoundException;
+import com.galeriafutbol.api.exception.UnauthorizedException;
 import com.galeriafutbol.api.mapper.AlbumMapper;
 import com.galeriafutbol.api.model.Album;
 import com.galeriafutbol.api.model.AlbumStatus;
@@ -154,7 +156,7 @@ public class AlbumServiceImpl implements AlbumService {
     @Transactional
     public AlbumAdminResponse createDraft() {
         int currentYear = OffsetDateTime.now().getYear();
-        User currentUser = getCurrentUser().orElse(null);
+        User currentUser = requireCurrentUser();
 
         for (int attempt = 0; attempt < 3; attempt++) {
             int seasonStart = currentYear + attempt;
@@ -165,7 +167,7 @@ public class AlbumServiceImpl implements AlbumService {
             album.setCreatedBy(currentUser);
 
             try {
-                Album saved = albumRepository.save(album);
+                Album saved = albumRepository.saveAndFlush(album);
                 return albumMapper.toAdminResponse(saved);
             } catch (DataIntegrityViolationException ex) {
                 if (attempt == 2) {
@@ -174,7 +176,7 @@ public class AlbumServiceImpl implements AlbumService {
             }
         }
 
-        throw new IllegalStateException("No se pudo crear un borrador");
+        throw new ConflictException("No se pudo crear un borrador por conflicto de datos");
     }
 
     @Override
@@ -184,7 +186,7 @@ public class AlbumServiceImpl implements AlbumService {
 
         Album album = new Album();
         applyAdminRequestToAlbum(album, request, category);
-        album.setCreatedBy(getCurrentUser().orElse(null));
+        album.setCreatedBy(requireCurrentUser());
 
         Album saved = albumRepository.save(album);
         return albumMapper.toAdminResponse(saved);
@@ -204,7 +206,7 @@ public class AlbumServiceImpl implements AlbumService {
         }
 
         applyAdminRequestToAlbum(album, request, category);
-        album.setUpdatedBy(getCurrentUser().orElse(null));
+        album.setUpdatedBy(requireCurrentUser());
 
         if (oldThumbnail != null && !oldThumbnail.isBlank()) {
             String newThumbnail = request.getThumbnail();
@@ -251,7 +253,7 @@ public class AlbumServiceImpl implements AlbumService {
 
         applyAdminRequestToAlbum(album, request, category);
         album.setStatus(AlbumStatus.PUBLISHED);
-        album.setUpdatedBy(getCurrentUser().orElse(null));
+        album.setUpdatedBy(requireCurrentUser());
 
         if (oldThumbnail != null && !oldThumbnail.isBlank()) {
             String newThumbnail = request.getThumbnail();
@@ -302,10 +304,16 @@ public class AlbumServiceImpl implements AlbumService {
 
     private Optional<User> getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
             return Optional.empty();
         }
         return userRepository.findByEmail(auth.getName());
+    }
+
+    private User requireCurrentUser() {
+        return getCurrentUser()
+                .orElseThrow(() -> new UnauthorizedException(
+                        "No se pudo resolver el usuario autenticado para esta operación"));
     }
 
 }
