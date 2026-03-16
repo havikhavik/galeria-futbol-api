@@ -4,10 +4,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.time.OffsetDateTime;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -152,14 +154,27 @@ public class AlbumServiceImpl implements AlbumService {
     @Transactional
     public AlbumAdminResponse createDraft() {
         int currentYear = OffsetDateTime.now().getYear();
-        Album album = new Album();
-        album.setTitle("Draft-" + System.currentTimeMillis());
-        album.setSeasonStart(currentYear);
-        album.setSeasonLabel(generateSeasonLabel(currentYear));
-        album.setCreatedBy(getCurrentUser().orElse(null));
+        User currentUser = getCurrentUser().orElse(null);
 
-        Album saved = albumRepository.save(album);
-        return albumMapper.toAdminResponse(saved);
+        for (int attempt = 0; attempt < 3; attempt++) {
+            int seasonStart = currentYear + attempt;
+            Album album = new Album();
+            album.setTitle("Draft-" + UUID.randomUUID());
+            album.setSeasonStart(seasonStart);
+            album.setSeasonLabel(generateSeasonLabel(seasonStart));
+            album.setCreatedBy(currentUser);
+
+            try {
+                Album saved = albumRepository.save(album);
+                return albumMapper.toAdminResponse(saved);
+            } catch (DataIntegrityViolationException ex) {
+                if (attempt == 2) {
+                    throw ex;
+                }
+            }
+        }
+
+        throw new IllegalStateException("No se pudo crear un borrador");
     }
 
     @Override
