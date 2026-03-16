@@ -9,7 +9,7 @@ import java.time.OffsetDateTime;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -169,9 +169,12 @@ public class AlbumServiceImpl implements AlbumService {
             try {
                 Album saved = albumRepository.saveAndFlush(album);
                 return albumMapper.toAdminResponse(saved);
-            } catch (DataIntegrityViolationException ex) {
+            } catch (DataAccessException ex) {
                 if (attempt == 2) {
-                    throw ex;
+                    String cause = ex.getMostSpecificCause() != null
+                            ? ex.getMostSpecificCause().getMessage()
+                            : ex.getMessage();
+                    throw new ConflictException("No se pudo crear un borrador por conflicto de datos: " + cause);
                 }
             }
         }

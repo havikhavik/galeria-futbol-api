@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -102,6 +103,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> onDataIntegrity(DataIntegrityViolationException ex, WebRequest req) {
         String msg = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage();
         return build(HttpStatus.CONFLICT, "Conflicto de integridad de datos", req, List.of(msg));
+    }
+
+    // 409 – Conflicto de acceso a datos (DB)
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ErrorResponse> onDataAccess(DataAccessException ex, WebRequest req) {
+        String msg = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage();
+        return build(HttpStatus.CONFLICT, "Conflicto de acceso a datos", req, List.of(msg));
     }
 
     // 409 – Conflicto funcional no-DB
