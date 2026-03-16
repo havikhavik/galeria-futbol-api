@@ -12,5 +12,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     Optional<Category> findByCode(String code);
 
+    Optional<Category> findFirstByOrderByIdAsc();
+
     List<Category> findByTeamType(TeamType teamType);
 }

@@ -157,6 +157,9 @@ public class AlbumServiceImpl implements AlbumService {
     public AlbumAdminResponse createDraft() {
         int currentYear = OffsetDateTime.now().getYear();
         User currentUser = requireCurrentUser();
+        Category defaultCategory = categoryRepository.findFirstByOrderByIdAsc()
+                .orElseThrow(() -> new ConflictException(
+                        "No se puede crear borrador: no hay categorías configuradas"));
 
         for (int attempt = 0; attempt < 3; attempt++) {
             int seasonStart = currentYear + attempt;
@@ -164,6 +167,7 @@ public class AlbumServiceImpl implements AlbumService {
             album.setTitle("Draft-" + UUID.randomUUID());
             album.setSeasonStart(seasonStart);
             album.setSeasonLabel(generateSeasonLabel(seasonStart));
+            album.setCategory(defaultCategory);
             album.setCreatedBy(currentUser);
 
             try {
@@ -171,10 +175,7 @@ public class AlbumServiceImpl implements AlbumService {
                 return albumMapper.toAdminResponse(saved);
             } catch (DataAccessException ex) {
                 if (attempt == 2) {
-                    String cause = ex.getMostSpecificCause() != null
-                            ? ex.getMostSpecificCause().getMessage()
-                            : ex.getMessage();
-                    throw new ConflictException("No se pudo crear un borrador por conflicto de datos: " + cause);
+                    throw new ConflictException("No se pudo crear un borrador por conflicto de datos");
                 }
             }
         }
