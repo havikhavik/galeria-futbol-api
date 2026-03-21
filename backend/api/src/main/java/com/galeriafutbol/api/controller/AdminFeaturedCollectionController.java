@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.galeriafutbol.api.dto.FeaturedCollectionAdminRequest;
 import com.galeriafutbol.api.dto.FeaturedCollectionAdminResponse;
 import com.galeriafutbol.api.dto.FeaturedCollectionPartialRequest;
+import com.galeriafutbol.api.dto.AlbumPublicResponse;
 import com.galeriafutbol.api.service.FeaturedCollectionService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,6 +40,20 @@ public class AdminFeaturedCollectionController {
     @Operation(summary = "Listar promociones/colecciones (Admin)", description = "Obtiene promociones/colecciones activas e inactivas para administración")
     public List<FeaturedCollectionAdminResponse> getAllForAdmin() {
         return featuredCollectionService.getAllForAdmin();
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','EDITOR')")
+    @Operation(summary = "Obtener promoción/colección (Admin)", description = "Obtiene una promoción/colección por ID para edición")
+    public FeaturedCollectionAdminResponse getByIdForAdmin(@PathVariable Long id) {
+        return featuredCollectionService.getByIdForAdmin(id);
+    }
+
+    @GetMapping("/{id}/albums")
+    @PreAuthorize("hasAnyRole('ADMIN','EDITOR')")
+    @Operation(summary = "Listar álbumes asociados (Admin)", description = "Obtiene los álbumes asociados a una colección, ordenados por displayOrder")
+    public List<AlbumPublicResponse> getAlbumsForAdmin(@PathVariable Long id) {
+        return featuredCollectionService.getAlbumsForAdmin(id);
     }
 
     @PostMapping("/draft")
@@ -64,6 +79,22 @@ public class AdminFeaturedCollectionController {
     public FeaturedCollectionAdminResponse updateFeaturedCollection(@PathVariable Long id,
             @RequestBody FeaturedCollectionPartialRequest request) {
         return featuredCollectionService.partialUpdate(id, request);
+    }
+
+    @PostMapping("/{id}/albums/{albumId}")
+    @PreAuthorize("hasAnyRole('ADMIN','EDITOR')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Asociar álbum a colección", description = "Asocia un álbum existente a la colección destacada")
+    public void addAlbumToCollection(@PathVariable Long id, @PathVariable Long albumId) {
+        featuredCollectionService.addAlbumToCollection(id, albumId);
+    }
+
+    @DeleteMapping("/{id}/albums/{albumId}")
+    @PreAuthorize("hasAnyRole('ADMIN','EDITOR')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Quitar álbum de colección", description = "Quita la asociación de un álbum de la colección destacada")
+    public void removeAlbumFromCollection(@PathVariable Long id, @PathVariable Long albumId) {
+        featuredCollectionService.removeAlbumFromCollection(id, albumId);
     }
 
     @DeleteMapping("/{id}")

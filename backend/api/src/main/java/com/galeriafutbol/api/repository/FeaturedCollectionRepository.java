@@ -15,4 +15,8 @@ public interface FeaturedCollectionRepository extends JpaRepository<FeaturedColl
     List<FeaturedCollection> findAllActive();
 
     FeaturedCollection findBySlug(String slug);
+
+    boolean existsBySlug(String slug);
+
+    boolean existsBySlugAndIdNot(String slug, Long id);
 }

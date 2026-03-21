@@ -10,9 +10,6 @@ import lombok.Data;
 public class FeaturedCollectionAdminRequest {
 
     @NotBlank
-    private String slug;
-
-    @NotBlank
     private String title;
 
     private String description;
