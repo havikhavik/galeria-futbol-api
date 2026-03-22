@@ -149,7 +149,7 @@ public class FeaturedCollectionServiceImpl implements FeaturedCollectionService 
 
         if (request.getBannerImage() != null) {
             String oldBanner = collection.getBannerImage();
-            if (oldBanner != null && !oldBanner.isBlank() && !oldBanner.equals(request.getBannerImage())) {
+            if (isStorageManagedBanner(oldBanner) && !oldBanner.equals(request.getBannerImage())) {
                 imageStorageService.delete(oldBanner);
             }
             collection.setBannerImage(request.getBannerImage());
@@ -225,7 +225,7 @@ public class FeaturedCollectionServiceImpl implements FeaturedCollectionService 
         FeaturedCollection collection = featuredCollectionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Promoción no encontrada: " + id));
 
-        if (collection.getBannerImage() != null && !collection.getBannerImage().isBlank()) {
+        if (isStorageManagedBanner(collection.getBannerImage())) {
             imageStorageService.delete(collection.getBannerImage());
         }
 
@@ -277,6 +277,15 @@ public class FeaturedCollectionServiceImpl implements FeaturedCollectionService 
         String withDashes = WHITESPACE.matcher(lower).replaceAll("-");
         String clean = NON_LATIN.matcher(withDashes).replaceAll("");
         return DUPLICATE_DASH.matcher(clean).replaceAll("-").replaceAll("(^-+|-+$)", "");
+    }
+
+    private boolean isStorageManagedBanner(String value) {
+        if (value == null || value.isBlank()) {
+            return false;
+        }
+
+        String normalized = value.trim().toLowerCase(Locale.ROOT);
+        return !"placeholder".equals(normalized) && normalized.startsWith("http");
     }
 
     private Optional<User> getCurrentUser() {

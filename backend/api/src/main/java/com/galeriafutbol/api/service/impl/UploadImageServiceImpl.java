@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.galeriafutbol.api.dto.UploadImageResponse;
 import com.galeriafutbol.api.exception.BadRequestException;
 import com.galeriafutbol.api.exception.ResourceNotFoundException;
+import com.galeriafutbol.api.model.FeaturedCollection;
 import com.galeriafutbol.api.repository.AlbumRepository;
 import com.galeriafutbol.api.repository.CategoryRepository;
 import com.galeriafutbol.api.repository.FeaturedCollectionRepository;
@@ -116,8 +117,7 @@ public class UploadImageServiceImpl implements UploadImageService {
             throw new BadRequestException("El id de la colección destacada es obligatorio");
         }
 
-        // Validar que la featured collection existe
-        featuredCollectionRepository.findById(featuredCollectionId)
+        FeaturedCollection collection = featuredCollectionRepository.findById(featuredCollectionId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Colección destacada no encontrada: " + featuredCollectionId));
 
@@ -135,10 +135,28 @@ public class UploadImageServiceImpl implements UploadImageService {
                     file.getSize(),
                     file.getContentType(),
                     keyHint);
+
+            String previousBanner = collection.getBannerImage();
+            collection.setBannerImage(url);
+            featuredCollectionRepository.save(collection);
+
+            if (isStorageManagedBanner(previousBanner) && !previousBanner.equals(url)) {
+                imageStorageService.delete(previousBanner);
+            }
+
             return new UploadImageResponse(url);
         } catch (Exception e) {
             throw new BadRequestException("No se pudo subir la imagen a R2: " + e.getMessage());
         }
+    }
+
+    private boolean isStorageManagedBanner(String value) {
+        if (value == null || value.isBlank()) {
+            return false;
+        }
+
+        String normalized = value.trim().toLowerCase();
+        return !"placeholder".equals(normalized) && normalized.startsWith("http");
     }
 
     private String normalizePrefix(String value) {
