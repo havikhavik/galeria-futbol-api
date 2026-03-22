@@ -15,6 +15,7 @@ public class FeaturedCollectionAdminResponse {
     private OffsetDateTime endDate;
     private boolean active;
     private int priority;
+    private long albumCount;
     private String bannerImage;
     private UserAdminResponse createdBy;
     private UserAdminResponse updatedBy;

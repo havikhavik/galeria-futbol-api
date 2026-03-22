@@ -3,6 +3,7 @@ package com.galeriafutbol.api.service.impl;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.text.Normalizer;
@@ -73,10 +74,27 @@ public class FeaturedCollectionServiceImpl implements FeaturedCollectionService 
     @Override
     @Transactional(readOnly = true)
     public List<FeaturedCollectionAdminResponse> getAllForAdmin() {
-        return featuredCollectionRepository.findAll(Sort.by(Sort.Direction.DESC, "updatedAt"))
+        List<FeaturedCollection> collections = featuredCollectionRepository.findAll(Sort.by(Sort.Direction.DESC, "updatedAt"));
+
+        List<Long> collectionIds = collections.stream()
+            .map(FeaturedCollection::getId)
+            .toList();
+
+        Map<Long, Long> albumCountByCollectionId = collectionIds.isEmpty()
+            ? Map.of()
+            : featuredCollectionAlbumRepository.countAlbumsByCollectionIds(collectionIds)
                 .stream()
-                .map(featuredCollectionMapper::toAdminResponse)
-                .collect(Collectors.toList());
+                .collect(Collectors.toMap(
+                    FeaturedCollectionAlbumRepository.CollectionAlbumCountProjection::getFeaturedCollectionId,
+                    FeaturedCollectionAlbumRepository.CollectionAlbumCountProjection::getTotalAlbums));
+
+        return collections.stream()
+            .map(collection -> {
+                FeaturedCollectionAdminResponse dto = featuredCollectionMapper.toAdminResponse(collection);
+                dto.setAlbumCount(albumCountByCollectionId.getOrDefault(collection.getId(), 0L));
+                return dto;
+            })
+            .collect(Collectors.toList());
     }
 
     @Override
