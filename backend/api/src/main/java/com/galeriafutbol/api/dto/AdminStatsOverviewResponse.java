@@ -6,6 +6,7 @@ import lombok.Data;
 public class AdminStatsOverviewResponse {
 
     private long totalAlbums;
+    private long totalCollections;
     private long totalClubs;
     private long totalSelections;
     private long totalImages;
