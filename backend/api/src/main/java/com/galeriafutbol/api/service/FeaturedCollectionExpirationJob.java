@@ -17,7 +17,7 @@ public class FeaturedCollectionExpirationJob {
         this.featuredCollectionRepository = featuredCollectionRepository;
     }
 
-    @Scheduled(fixedDelayString = "${featured.expiration-check-delay-ms:1800000}")
+    @Scheduled(fixedDelayString = "${featured.expiration-check-delay-ms:21600000}")
     @Transactional
     public void deactivateExpiredCollections() {
         featuredCollectionRepository.deactivateExpired(OffsetDateTime.now());
